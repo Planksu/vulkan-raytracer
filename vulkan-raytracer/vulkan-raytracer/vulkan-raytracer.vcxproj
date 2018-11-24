@@ -23,7 +23,7 @@
     <ProjectGuid>{7A168E98-A14D-4A0F-BED4-11098D543B9F}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>vulkanraytracer</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -88,13 +88,13 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.85.0\Include;C:\Users\anttonjok\Documents\Visual Studio 2017\Libraries\glm;C:\Users\anttonjok\Documents\Visual Studio 2017\Libraries\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.85.0\Include;C:\Users\Antton\Documents\Visual Studio 2017\Libraries\glfw\include;C:\Users\Antton\Documents\Visual Studio 2017\Libraries\glm</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.1.85.0\Lib;C:\Users\anttonjok\Documents\Visual Studio 2017\Libraries\glfw\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.1.85.0\Lib;C:\Users\Antton\Documents\Visual Studio 2017\Libraries\glfw\lib-vc2015</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -104,13 +104,13 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.85.0\Include;C:\Users\anttonjok\Documents\Visual Studio 2017\Libraries\glm;C:\Users\anttonjok\Documents\Visual Studio 2017\Libraries\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.85.0\Include;C:\Users\Antton\Documents\Visual Studio 2017\Libraries\glfw\include;C:\Users\Antton\Documents\Visual Studio 2017\Libraries\glm</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.1.85.0\Lib;C:\Users\anttonjok\Documents\Visual Studio 2017\Libraries\glfw\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.1.85.0\Lib;C:\Users\Antton\Documents\Visual Studio 2017\Libraries\glfw\lib-vc2015</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -122,7 +122,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.85.0\Include;C:\Users\anttonjok\Documents\Visual Studio 2017\Libraries\glm;C:\Users\anttonjok\Documents\Visual Studio 2017\Libraries\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.85.0\Include;C:\Users\Antton\Documents\Visual Studio 2017\Libraries\glfw\include;C:\Users\Antton\Documents\Visual Studio 2017\Libraries\glm</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -130,7 +130,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.1.85.0\Lib;C:\Users\anttonjok\Documents\Visual Studio 2017\Libraries\glfw\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.1.85.0\Lib;C:\Users\Antton\Documents\Visual Studio 2017\Libraries\glfw\lib-vc2015</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -142,7 +142,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.85.0\Include;C:\Users\anttonjok\Documents\Visual Studio 2017\Libraries\glm;C:\Users\anttonjok\Documents\Visual Studio 2017\Libraries\glfw\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.1.85.0\Include;C:\Users\Antton\Documents\Visual Studio 2017\Libraries\glfw\include;C:\Users\Antton\Documents\Visual Studio 2017\Libraries\glm</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -150,7 +150,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.1.85.0\Lib;C:\Users\anttonjok\Documents\Visual Studio 2017\Libraries\glfw\lib-vc2015;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.1.85.0\Lib;C:\Users\Antton\Documents\Visual Studio 2017\Libraries\glfw\lib-vc2015</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
