@@ -48,6 +48,7 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
+// Inspired by SaschaWillems- raytracer tutorials
 class Camera
 {
 private:
@@ -187,17 +188,13 @@ public:
 		}
 	};
 
-	// Update camera passing separate axis data (gamepad)
-	// Returns true if view or position has been changed
+
 	bool updatePad(glm::vec2 axisLeft, glm::vec2 axisRight, float deltaTime)
 	{
 		bool retVal = false;
 
 		if (type == CameraType::firstperson)
 		{
-			// Use the common console thumbstick layout		
-			// Left = view, right = move
-
 			const float deadZone = 0.0015f;
 			const float range = 1.0f - deadZone;
 
@@ -238,10 +235,6 @@ public:
 				retVal = true;
 			}
 		}
-		else
-		{
-			// todo: move code from example base class for look-at
-		}
 
 		if (retVal)
 		{
@@ -253,6 +246,7 @@ public:
 
 };
 
+// Inspired by SaschaWillems- raytracer tutorials
 class Texture {
 public:
 	VkImage image;
@@ -315,7 +309,6 @@ VkBool32 getSupportedDepthFormat(VkPhysicalDevice physicalDevice, VkFormat *dept
 	{
 		VkFormatProperties formatProps;
 		vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &formatProps);
-		// Format must support depth stencil attachment for optimal tiling
 		if (formatProps.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
 		{
 			*depthFormat = format;
@@ -362,7 +355,6 @@ public:
 		InitWindow();
 		InitVulkan();
 		MainLoop();
-		Cleanup();
 	}
 
 	typedef struct _SwapChainBuffers
@@ -403,7 +395,6 @@ public:
 
 
 #if defined(VK_USE_PLATFORM_ANDROID_KHR)
-	// true if application has focused, false if moved to background
 	bool focused = false;
 	struct TouchPos {
 		int32_t x;
@@ -412,7 +403,6 @@ public:
 	bool touchDown = false;
 	double touchTimer = 0.0;
 	int64_t lastTapTime = 0;
-	/** @brief Product model and manufacturer of the Android device (via android.Product*) */
 	std::string androidProduct;
 #endif
 
@@ -586,7 +576,75 @@ public:
 	}
 	~VulkanRaytracer()
 	{
+		vkDestroyPipeline(device, graphics.pipeline, nullptr);
+		vkDestroyPipelineLayout(device, graphics.pipelineLayout, nullptr);
+		vkDestroyDescriptorSetLayout(device, graphics.descriptorSetLayout, nullptr);
 
+		vkDestroyPipeline(device, compute.pipeline, nullptr);
+		vkDestroyPipelineLayout(device, compute.pipelineLayout, nullptr);
+		vkDestroyDescriptorSetLayout(device, compute.descriptorSetLayout, nullptr);
+		vkDestroyFence(device, compute.fence, nullptr);
+		vkDestroyCommandPool(device, compute.commandPool, nullptr);
+
+		compute.uniformBuffer.destroy();
+		compute.storageBuffers.spheres.destroy();
+		compute.storageBuffers.planes.destroy();
+
+		textureComputeTarget.destroy(device);
+
+		if (swapChain != VK_NULL_HANDLE)
+		{
+			for (uint32_t i = 0; i < imageCount; i++)
+			{
+				vkDestroyImageView(device, buffers[i].view, nullptr);
+			}
+		}
+		if (surface != VK_NULL_HANDLE)
+		{
+			vkDestroySwapchainKHR(device, swapChain, nullptr);
+			vkDestroySurfaceKHR(instance, surface, nullptr);
+		}
+		surface = VK_NULL_HANDLE;
+		swapChain = VK_NULL_HANDLE;
+		if (descriptorPool != VK_NULL_HANDLE)
+		{
+			vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+		}
+		vkFreeCommandBuffers(device, cmdPool, static_cast<uint32_t>(drawCmdBuffers.size()), drawCmdBuffers.data());
+		vkDestroyRenderPass(device, renderPass, nullptr);
+		for (uint32_t i = 0; i < frameBuffers.size(); i++)
+		{
+			vkDestroyFramebuffer(device, frameBuffers[i], nullptr);
+		}
+
+		for (auto& shaderModule : shaderModules)
+		{
+			vkDestroyShaderModule(device, shaderModule, nullptr);
+		}
+		vkDestroyImageView(device, depthStencil.view, nullptr);
+		vkDestroyImage(device, depthStencil.image, nullptr);
+		vkFreeMemory(device, depthStencil.mem, nullptr);
+
+		vkDestroyPipelineCache(device, pipelineCache, nullptr);
+
+		vkDestroyCommandPool(device, cmdPool, nullptr);
+
+		vkDestroySemaphore(device, semaphores.presentComplete, nullptr);
+		vkDestroySemaphore(device, semaphores.renderComplete, nullptr);
+		for (auto& fence : waitFences) {
+			vkDestroyFence(device, fence, nullptr);
+		}
+
+		vkDestroyDevice(device, nullptr);
+
+		if (enableValidationLayers)
+		{
+			DestroyDebugUtilsMessengerEXT(instance, callback, nullptr);
+		}
+
+		vkDestroyInstance(instance, nullptr);
+		glfwDestroyWindow(window);
+		glfwTerminate();
 	}
 
 	uint32_t currentId = 0;
@@ -753,7 +811,6 @@ public:
 
 		VkImageView attachments[2];
 
-		// Depth/Stencil attachment is the same for all frame buffers
 		attachments[1] = depthStencil.view;
 
 		VkFramebufferCreateInfo frameBufferCreateInfo = {};
@@ -766,7 +823,6 @@ public:
 		frameBufferCreateInfo.height = height;
 		frameBufferCreateInfo.layers = 1;
 
-		// Create frame buffers for every swap chain image
 		frameBuffers.resize(imageCount);
 		for (uint32_t i = 0; i < frameBuffers.size(); i++)
 		{
@@ -906,12 +962,10 @@ public:
 
 		for (int32_t i = 0; i < drawCmdBuffers.size(); ++i)
 		{
-			// Set target frame buffer
 			renderPassBeginInfo.framebuffer = frameBuffers[i];
 
 			vkBeginCommandBuffer(drawCmdBuffers[i], &cmdBufInfo);
 
-			// Image memory barrier to make sure that compute shader writes are finished before sampling from the texture
 			VkImageMemoryBarrier imageMemoryBarrier = {};
 			imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 			imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_GENERAL;
@@ -944,9 +998,6 @@ public:
 			scissor.offset.x = 0;
 			scissor.offset.y = 0;
 			vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
-
-			// Display ray traced image generated by compute shader as a full screen quad
-			// Quad vertices are generated in the vertex shader
 			vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphics.pipelineLayout, 0, 1, &graphics.descriptorSet, 0, NULL);
 			vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphics.pipeline);
 			vkCmdDraw(drawCmdBuffers[i], 3, 1, 0, 0);
@@ -978,7 +1029,6 @@ public:
 
 	void CreateCommandBuffers()
 	{
-		// Create one command buffer for each swap chain image and reuse for rendering
 		drawCmdBuffers.resize(imageCount);
 
 		VkCommandBufferAllocateInfo cmdBufAllocateInfo = {};
@@ -1089,7 +1139,6 @@ public:
 
 		vkUpdateDescriptorSets(device, computeWriteDescriptorSets.size(), computeWriteDescriptorSets.data(), 0, NULL);
 
-		// Create compute shader pipelines
 		VkComputePipelineCreateInfo computePipelineCreateInfo = {};
 		computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
 		computePipelineCreateInfo.layout = compute.pipelineLayout;
@@ -1099,14 +1148,12 @@ public:
 		computePipelineCreateInfo.stage = loadShader(getAssetPath() + "shaders/raytracing.comp.spv", VK_SHADER_STAGE_COMPUTE_BIT);
 		vkCreateComputePipelines(device, pipelineCache, 1, &computePipelineCreateInfo, nullptr, &compute.pipeline);
 
-		// Separate command pool as queue family for compute may be different than graphics
 		VkCommandPoolCreateInfo cmdPoolInfo = {};
 		cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		cmdPoolInfo.queueFamilyIndex = queueFamilyIndices.compute;
 		cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 		vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &compute.commandPool);
 
-		// Create a command buffer for compute operations
 		VkCommandBufferAllocateInfo cmdBufAllocateInfo = {};
 		cmdBufAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		cmdBufAllocateInfo.commandPool = compute.commandPool;
@@ -1115,13 +1162,11 @@ public:
 
 		vkAllocateCommandBuffers(device, &cmdBufAllocateInfo, &compute.commandBuffer);
 
-		// Fence for compute CB sync
 		VkFenceCreateInfo fenceCreateInfo{};
 		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 		vkCreateFence(device, &fenceCreateInfo, nullptr, &compute.fence);
 
-		// Build a single command buffer containing the compute dispatch commands
 		BuildComputeCommandBuffer();
 	}
 
@@ -1312,7 +1357,7 @@ public:
 #else
 		shaderStage.module = loadShader(fileName.c_str(), device);
 #endif
-		shaderStage.pName = "main"; // todo : make param
+		shaderStage.pName = "main"; 
 		assert(shaderStage.module != VK_NULL_HANDLE);
 		shaderModules.push_back(shaderStage.module);
 		return shaderStage;
@@ -1426,7 +1471,6 @@ public:
 		tex->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		SetImageLayout(layoutCmd, tex->image, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_UNDEFINED, tex->imageLayout);
 
-		//flush command buffer
 		vkEndCommandBuffer(layoutCmd);
 		VkSubmitInfo submitInfo = {};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1493,7 +1537,6 @@ public:
 		VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
 		VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT)
 	{
-		// Create an image barrier object
 		VkImageMemoryBarrier imageMemoryBarrier = {};
 		imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
 		imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -1631,7 +1674,6 @@ public:
 		copyRegion.size = storageBufferSize;
 		vkCmdCopyBuffer(copyCmd, stagingBuffer.buffer, compute.storageBuffers.spheres.buffer, 1, &copyRegion);
 
-		//flush command buffer
 		if (copyCmd != VK_NULL_HANDLE)
 		{
 			vkEndCommandBuffer(copyCmd);
@@ -1665,7 +1707,6 @@ public:
 			planesList.data());
 
 		CreateBuffer(
-			// The SSBO will be used as a storage buffer for the compute pipeline and as a vertex buffer in the graphics pipeline
 			VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			&compute.storageBuffers.planes,
@@ -1687,7 +1728,6 @@ public:
 		copyRegion2.size = storageBufferSize;
 		vkCmdCopyBuffer(copyCmd2, stagingBuffer.buffer, compute.storageBuffers.planes.buffer, 1, &copyRegion2);
 
-		//flush command buffer
 		if (copyCmd != VK_NULL_HANDLE)
 		{
 			vkEndCommandBuffer(copyCmd2);
@@ -1706,7 +1746,6 @@ public:
 
 	VkResult createBuffer(VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize size, VkBuffer *buffer, VkDeviceMemory *memory, void *data = nullptr)
 	{
-		// Create the buffer handle
 		VkBufferCreateInfo bufferCreateInfo = {};
 		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		bufferCreateInfo.usage = usageFlags;
@@ -1714,23 +1753,19 @@ public:
 		bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		vkCreateBuffer(device, &bufferCreateInfo, nullptr, buffer);
 
-		// Create the memory backing up the buffer handle
 		VkMemoryRequirements memReqs;
 		VkMemoryAllocateInfo memAlloc = {};
 		memAlloc.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		vkGetBufferMemoryRequirements(device, *buffer, &memReqs);
 		memAlloc.allocationSize = memReqs.size;
-		// Find a memory type index that fits the properties of the buffer
 		memAlloc.memoryTypeIndex = getMemoryType(memReqs.memoryTypeBits, memoryPropertyFlags);
 		vkAllocateMemory(device, &memAlloc, nullptr, memory);
 
-		// If a pointer to the buffer data has been passed, map the buffer and copy over the data
 		if (data != nullptr)
 		{
 			void *mapped;
 			vkMapMemory(device, *memory, 0, size, 0, &mapped);
 			memcpy(mapped, data, size);
-			// If host coherency hasn't been requested, do a manual flush to make writes visible
 			if ((memoryPropertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0)
 			{
 				VkMappedMemoryRange mappedRange = {};
@@ -1743,7 +1778,6 @@ public:
 			vkUnmapMemory(device, *memory);
 		}
 
-		// Attach the memory to the buffer object
 		vkBindBufferMemory(device, *buffer, *memory, 0);
 
 		return VK_SUCCESS;
@@ -2030,16 +2064,12 @@ public:
 		swapchainCI.pQueueFamilyIndices = NULL;
 		swapchainCI.presentMode = swapchainPresentMode;
 		swapchainCI.oldSwapchain = oldSwapchain;
-		// Setting clipped to VK_TRUE allows the implementation to discard rendering outside of the surface area
 		swapchainCI.clipped = VK_TRUE;
 		swapchainCI.compositeAlpha = compositeAlpha;
 
-		// Enable transfer source on swap chain images if supported
 		if (surfCaps.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) {
 			swapchainCI.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		}
-
-		// Enable transfer destination on swap chain images if supported
 		if (surfCaps.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT) {
 			swapchainCI.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		}
@@ -2055,12 +2085,9 @@ public:
 			vkDestroySwapchainKHR(device, oldSwapchain, nullptr);
 		}
 		vkGetSwapchainImagesKHR(device, swapChain, &imageCount, NULL);
-
-		// Get the swap chain images
 		images.resize(imageCount);
 		vkGetSwapchainImagesKHR(device, swapChain, &imageCount, images.data());
 
-		// Get the swap chain buffers containing the image and imageview
 		buffers.resize(imageCount);
 		for (uint32_t i = 0; i < imageCount; i++)
 		{
@@ -2195,7 +2222,6 @@ public:
 		int i = 0;
 		for (const auto& queueFamily : queueFamilies)
 		{
-			// We need atleast one queue family that supports graphics bit
 			if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
 			{
 				indices.graphicsFamily = i;
@@ -2274,7 +2300,6 @@ public:
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &swapChain;
 		presentInfo.pImageIndices = &currentBuffer;
-		// Check if a wait semaphore has been specified to wait for before presenting the image
 		if (semaphores.renderComplete != VK_NULL_HANDLE)
 		{
 			presentInfo.pWaitSemaphores = &semaphores.renderComplete;
@@ -2328,7 +2353,6 @@ public:
 			createInfo.enabledLayerCount = 0;
 		}
 
-		// Create instance
 		VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
 
 		if (result != VK_SUCCESS)
@@ -2409,7 +2433,6 @@ public:
 		const char** glfwExtensions;
 		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
-		// Dont get this shit
 		std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
 		if (enableValidationLayers)
@@ -2428,37 +2451,6 @@ public:
 		std::cerr << "validation layer:" << pCallbackData->pMessage << std::endl;
 
 		return VK_FALSE;
-	}
-
-	void Cleanup()
-	{
-		vkDestroyPipeline(device, graphics.pipeline, nullptr);
-		vkDestroyPipelineLayout(device, graphics.pipelineLayout, nullptr);
-		vkDestroyDescriptorSetLayout(device, graphics.descriptorSetLayout, nullptr);
-		vkDestroyPipeline(device, compute.pipeline, nullptr);
-		vkDestroyPipelineLayout(device, compute.pipelineLayout, nullptr);
-		vkDestroyDescriptorSetLayout(device, compute.descriptorSetLayout, nullptr);
-		vkDestroyFence(device, compute.fence, nullptr);
-		vkDestroyCommandPool(device, compute.commandPool, nullptr);
-		compute.uniformBuffer.destroy();
-		compute.storageBuffers.spheres.destroy();
-		compute.storageBuffers.planes.destroy();
-		textureComputeTarget.destroy(device);
-		vkDestroyRenderPass(device, renderPass, nullptr);
-
-		vkDestroySwapchainKHR(device, swapChain, nullptr);
-		vkDestroyDevice(device, nullptr);
-
-		if (enableValidationLayers)
-		{
-			DestroyDebugUtilsMessengerEXT(instance, callback, nullptr);
-		}
-
-		// Always destroy surface before instance
-		vkDestroySurfaceKHR(instance, surface, nullptr);
-		vkDestroyInstance(instance, nullptr);
-		glfwDestroyWindow(window);
-		glfwTerminate();
 	}
 };
 
