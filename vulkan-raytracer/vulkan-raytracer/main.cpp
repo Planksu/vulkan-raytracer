@@ -1,5 +1,6 @@
 #define GLFW_INCLUDE_VULKAN
 #define TEX_DIM 2048
+#define NDEBUG
 #include <GLFW\glfw3.h>
 
 
@@ -258,10 +259,8 @@ public:
 	uint32_t layerCount;
 	VkDescriptorImageInfo descriptor;
 
-	/** @brief Optional sampler to use with this texture */
 	VkSampler sampler;
 
-	/** @brief Update image descriptor from current sampler, view and image layout */
 	void updateDescriptor()
 	{
 		descriptor.sampler = sampler;
@@ -269,7 +268,6 @@ public:
 		descriptor.imageLayout = imageLayout;
 	}
 
-	/** @brief Release all Vulkan resources held by this texture */
 	void destroy(VkDevice device)
 	{
 		vkDestroyImageView(device, view, nullptr);
